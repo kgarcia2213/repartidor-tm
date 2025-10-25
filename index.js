@@ -1,0 +1,91 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import pool from "./db.js";
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ---------------------- LOGIN ----------------------
+app.post("/api/login", async (req, res) => {
+  const { id } = req.body;
+  try {
+    const result = await pool.query("SELECT * FROM repartidores WHERE id = $1", [id]);
+    if (result.rows.length === 0) return res.status(404).json({ message: "Repartidor no encontrado" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- PEDIDOS PENDIENTES ----------------------
+app.get("/api/pedidos/asignados/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT p.*, c.nombre as cliente_nombre, c.telefono as cliente_telefono
+      FROM pedidos p
+      JOIN clientes c ON p.cliente_id = c.id
+      WHERE p.estado = 'Pendiente'
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- DETALLE PEDIDO ----------------------
+app.get("/api/pedidos/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT p.*, c.nombre as cliente_nombre, c.telefono as cliente_telefono, c.direccion as cliente_direccion
+      FROM pedidos p
+      JOIN clientes c ON p.cliente_id = c.id
+      WHERE p.id = $1
+    `, [id]);
+    if (result.rows.length === 0) return res.status(404).json({ message: "Pedido no encontrado" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- CONFIRMAR ENTREGA ----------------------
+app.post("/api/entregas/confirmar", async (req, res) => {
+  const { pedido_id, repartidor_id, firma_foto, comentario } = req.body;
+  try {
+    await pool.query(`
+      INSERT INTO entregas (pedido_id, repartidor_id, fecha_salida, fecha_entrega, firma_foto, status, comentario)
+      VALUES ($1, $2, NOW(), NOW(), $3, 'Entregado', $4)
+    `, [pedido_id, repartidor_id, firma_foto, comentario]);
+    await pool.query("UPDATE pedidos SET estado = 'Entregado' WHERE id = $1", [pedido_id]);
+    res.json({ message: "Entrega confirmada" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- HISTORIAL ----------------------
+app.get("/api/historial/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(`
+      SELECT e.*, p.direccion, c.nombre as cliente_nombre
+      FROM entregas e
+      JOIN pedidos p ON e.pedido_id = p.id
+      JOIN clientes c ON p.cliente_id = c.id
+      WHERE e.repartidor_id = $1
+      ORDER BY e.fecha_entrega DESC
+    `, [id]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- INICIAR SERVIDOR ----------------------
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
