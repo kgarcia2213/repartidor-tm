@@ -12,7 +12,9 @@ app.use(express.json());
 app.post("/api/login", async (req, res) => {
   const { id } = req.body;
   try {
+    console.log("ID recibido:", id);
     const result = await pool.query("SELECT * FROM repartidores WHERE id = $1", [id]);
+      console.log("Resultado:", result.rows);
     if (result.rows.length === 0) return res.status(404).json({ message: "Repartidor no encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
