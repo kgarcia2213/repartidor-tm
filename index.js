@@ -5,8 +5,28 @@ import pool from "./db.js";
 
 dotenv.config();
 const app = express();
-app.use(cors());
+//app.use(cors());
+//app.use(express.json());
+const allowedOrigins = [
+  "https://repartidor-pwa.onrender.com",  // tu frontend en Render
+  "http://localhost:5173" // para pruebas locales, si usas Vite o similar
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS bloqueado por política de seguridad"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+
 
 // ---------------------- LOGIN ----------------------
 app.post("/api/login", async (req, res) => {
