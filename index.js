@@ -16,6 +16,7 @@ app.post("/api/login", async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ message: "Repartidor no encontrado" });
     res.json(result.rows[0]);
   } catch (err) {
+      console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
