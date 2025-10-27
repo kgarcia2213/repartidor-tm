@@ -111,6 +111,54 @@ app.get("/api/historial/:id", async (req, res) => {
   }
 });
 
+// ✅ CRUD clientes
+app.get("/api/clientes", async (_, res) => {
+  const r = await pool.query("SELECT * FROM clientes ORDER BY id DESC");
+  res.json(r.rows);
+});
+app.post("/api/clientes", async (req, res) => {
+  const { nombre, telefono, direccion } = req.body;
+  await pool.query(
+    "INSERT INTO clientes (nombre, telefono, direccion) VALUES ($1,$2,$3)",
+    [nombre, telefono, direccion]
+  );
+  res.json({ message: "Cliente agregado" });
+});
+
+// ✅ CRUD repartidores
+app.get("/api/repartidores", async (_, res) => {
+  const r = await pool.query("SELECT * FROM repartidores ORDER BY id DESC");
+  res.json(r.rows);
+});
+app.post("/api/repartidores", async (req, res) => {
+  const { nombre, telefono } = req.body;
+  await pool.query(
+    "INSERT INTO repartidores (nombre, telefono) VALUES ($1,$2)",
+    [nombre, telefono]
+  );
+  res.json({ message: "Repartidor agregado" });
+});
+
+// ✅ CRUD pedidos
+app.get("/api/pedidos", async (_, res) => {
+  const r = await pool.query(`
+    SELECT p.*, c.nombre as cliente, r.nombre as repartidor
+    FROM pedidos p
+    LEFT JOIN clientes c ON p.cliente_id = c.id
+    LEFT JOIN repartidores r ON p.repartidor_id = r.id
+    ORDER BY p.id DESC
+  `);
+  res.json(r.rows);
+});
+app.post("/api/pedidos", async (req, res) => {
+  const { cliente_id, repartidor_id, direccion } = req.body;
+  await pool.query(
+    "INSERT INTO pedidos (cliente_id, repartidor_id, direccion) VALUES ($1,$2,$3)",
+    [cliente_id, repartidor_id, direccion]
+  );
+  res.json({ message: "Pedido creado" });
+});
+
 // ---------------------- INICIAR SERVIDOR ----------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
