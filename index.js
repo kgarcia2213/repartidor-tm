@@ -145,7 +145,7 @@ app.get("/api/pedidos", async (_, res) => {
     SELECT p.*, c.nombre as cliente, r.nombre as repartidor
     FROM pedidos p
     LEFT JOIN clientes c ON p.cliente_id = c.id
-    LEFT JOIN repartidores r ON p.repartidor_id = r.id
+    LEFT JOIN repartidores r ON p.id = r.id
     ORDER BY p.id DESC
   `);
   res.json(r.rows);
