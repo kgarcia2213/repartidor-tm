@@ -9,6 +9,7 @@ const app = express();
 //app.use(express.json());
 const allowedOrigins = [
   "https://repartidor-pwa.onrender.com",  // tu frontend en Render
+  "https://repartidor-admin.onrender.com", // tu front end admin en render
   "http://localhost:5173" // para pruebas locales, si usas Vite o similar
 ];
 
