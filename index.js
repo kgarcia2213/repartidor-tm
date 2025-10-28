@@ -54,7 +54,8 @@ app.get("/api/pedidos/asignados/:id", async (req, res) => {
       FROM pedidos p
       JOIN clientes c ON p.cliente_id = c.id
       WHERE p.estado = 'Pendiente'
-    `);
+      and id = $1`, [id]
+    );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
