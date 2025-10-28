@@ -142,11 +142,10 @@ app.post("/api/repartidores", async (req, res) => {
 // ✅ CRUD pedidos
 app.get("/api/pedidos", async (_, res) => {
   const r = await pool.query(`
-    SELECT p.*, c.nombre as cliente, r.nombre as repartidor
-    FROM pedidos p
-    LEFT JOIN clientes c ON p.cliente_id = c.id
-    LEFT JOIN repartidores r ON p.id = r.id
-    ORDER BY p.id DESC
+SELECT p.id, nombre, p.direccion, estado, fecha_entrega, diaspendientesdeentrega
+	FROM public.pedidos p
+	inner join public.clientes c
+	on c.id=p.id
   `);
   res.json(r.rows);
 });
